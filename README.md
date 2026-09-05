@@ -330,6 +330,6 @@ This project is available for learning, development, and personal automation pur
 
 <img width="1920" height="1080" alt="report 2" src="https://github.com/user-attachments/assets/2cc41c02-de43-42f7-b5d5-c533de33bcf0" />
 
-<img width="1920" height="1080" alt="ready" src="https://github.com/user-attachments/assets/1bf94b17-c856-4263-aff9-f8d1fa10cb96" />
+<img width="1920" height="1080" alt="project 36" src="https://github.com/user-attachments/assets/1bf94b17-c856-4263-aff9-f8d1fa10cb96" />
 
 
