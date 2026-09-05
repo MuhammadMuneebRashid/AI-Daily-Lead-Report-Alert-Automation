@@ -1,122 +1,333 @@
-# AI Daily Lead Report & Alert Automation
+# 🤖 AI Lead Analysis & Automated Reporting System
 
-## 📌 Project Overview
+An AI-powered **n8n automation workflow** that automatically collects leads from Google Sheets, filters already-processed records, analyzes leads using **Google Gemini**, separates them into **problematic and normal leads**, generates a combined report, sends the report via Gmail, and marks the processed leads as **Sent**.
 
-This project is an AI-powered lead processing and daily reporting automation built with n8n.
+This workflow is designed to reduce manual lead analysis and provide teams with a consistent automated lead-reporting process.
 
-The system collects lead information from a Tally Form, stores it in Google Sheets, and then automatically analyzes the leads using Gemini AI.
+---
 
-The AI identifies whether a lead is *Normal* or *Problematic*.
+## 🚀 Features
 
-- Problematic leads → Alert is sent to the Team and Owner
-- Normal leads → Daily report is sent to the Owner
+* ⏰ **Scheduled Automation**
+
+  * Runs automatically using an n8n Schedule Trigger.
+
+* 📊 **Google Sheets Integration**
+
+  * Reads lead information directly from a Google Sheet.
+  * Uses the lead's `report_status` to identify unprocessed records.
+
+* 🔍 **Lead Filtering**
+
+  * Automatically ignores leads that have already been marked as `sent`.
+  * Processes only new/unreported leads.
+
+* 🧠 **AI-Powered Lead Analysis**
+
+  * Uses **Google Gemini Flash** through the n8n AI Agent.
+  * Analyzes all collected leads together instead of generating individual reports.
+
+* 🚨 **Problematic Lead Detection**
+
+  * Separates leads into:
+
+    * Problematic Leads
+    * Normal Leads
+
+* 📋 **Combined Reporting**
+
+  * Generates a consolidated report for the processed leads.
+  * Creates a separate alert message for problematic leads.
+
+* 📧 **Automated Email Reporting**
+
+  * Sends the generated report through Gmail.
+
+* ✅ **Automatic Status Updates**
+
+  * After the report is sent, processed rows are updated with:
+    `report_status = sent`
 
 ---
 
 ## 🔄 Workflow
 
-### Workflow 1 – Lead Collection
-
-Tally Form
-↓
-Webhook
-↓
-Edit Fields
-↓
-Google Sheets (Append Row)
-
-
-### Workflow 2 – Daily Lead Analysis
-
+```text
 Schedule Trigger
-↓
-Google Sheets (Get Rows)
-↓
-AI Agent (Gemini)
-↓
-Structured Output
-↓
-IF
-↙️        ↘️
-Problem   Normal
-↓           ↓
-Alert      Report
-↓           ↓
-Team +     Owner
-Owner
+       ↓
+Get Leads from Google Sheets
+       ↓
+Filter Unprocessed Leads
+       ↓
+Prepare Lead Data
+       ↓
+AI Agent + Google Gemini
+       ↓
+Analyze & Categorize Leads
+       ↓
+Generate Structured Report
+       ↓
+Send Report via Gmail
+       ↓
+Identify Processed Rows
+       ↓
+Update Google Sheets
+       ↓
+Mark Leads as "Sent"
+```
 
 ---
 
-## ⚙️ How It Works
+## 🧩 Workflow Components
 
-1. A user submits their information through the Tally Form.
-2. The Webhook receives the submitted data.
-3. Edit Fields prepares the data in the required format.
-4. The lead is stored in Google Sheets.
-5. The Schedule Trigger starts the daily reporting workflow.
-6. Google Sheets retrieves the stored lead data.
-7. Gemini AI analyzes the leads.
-8. Structured Output validates the AI response in JSON format.
-9. The IF node checks whether the lead is problematic or normal.
-10. If the lead is problematic, an alert email is sent to the Team and Owner.
-11. If the lead is normal, a daily report is sent to the Owner.
+### 1. Schedule Trigger
+
+The workflow starts automatically through an n8n Schedule Trigger.
+
+The current workflow is configured with a scheduled execution time.
+
+### 2. Get Rows from Google Sheets
+
+The workflow retrieves lead records from Google Sheets.
+
+The sheet contains information such as:
+
+* Name
+* Email
+* Company Name
+* Company Size
+* Country
+* Industry
+* Estimated Budget
+* Project Description
+* Service Required
+* Report Status
+* Row Number
 
 ---
 
-## 🤖 AI Classification
+### 3. JavaScript Lead Processing
 
-The AI classifies leads into two categories:
+A JavaScript Code node filters the incoming records.
 
-### Problem
-The lead requires attention or action.
+Only leads whose `report_status` is **not `sent`** are processed.
 
-### Normal
-The lead does not require immediate attention.
+The workflow then prepares the lead information into a structured text format before sending it to the AI Agent.
+
+---
+
+### 4. AI Lead Analysis
+
+The AI Agent receives the collected lead data and analyzes the leads as a group.
+
+The AI is instructed to:
+
+* Analyze all leads
+* Separate problematic and normal leads
+* Create a combined report
+* Provide processed row numbers
+* Generate an alert message for problematic leads
+
+This prevents the workflow from sending a separate email for every individual lead.
+
+---
+
+### 5. Google Gemini
+
+The workflow uses **Google Gemini Flash** as the AI language model for lead analysis.
+
+---
+
+### 6. Structured AI Output
+
+A Structured Output Parser ensures that the AI response follows a predictable JSON structure.
+
+Expected output includes:
+
+```json
+{
+  "status": "",
+  "problematic_leads": "",
+  "normal_leads": "",
+  "report": "",
+  "alert_message": "",
+  "processed_rows": ""
+}
+```
+
+This makes the AI response easier to process in the following automation steps.
+
+---
+
+### 7. Gmail Report
+
+After analysis, the generated report is sent automatically through Gmail.
+
+The email uses the AI-generated `report` as the message content.
+
+---
+
+### 8. Update Processed Leads
+
+After the email is successfully sent, the workflow identifies the rows that were processed and updates their status.
+
+```text
+report_status → sent
+```
+
+The row number is used as the matching field when updating the Google Sheet.
+
+This prevents the same leads from being included in future reports.
+
+---
+
+## 📌 Lead Processing Logic
+
+The workflow follows this logic:
+
+```text
+IF report_status = "sent"
+        ↓
+    Skip Lead
+
+IF report_status != "sent"
+        ↓
+    Process Lead
+        ↓
+    Send Report
+        ↓
+    Mark as "sent"
+```
+
+This provides a simple mechanism for avoiding duplicate reporting.
 
 ---
 
 ## 🛠️ Technologies Used
 
-- n8n
-- Tally Forms
-- Webhooks
-- Google Sheets
-- Gemini AI
-- AI Agent
-- Structured Output
-- IF Node
-- Email Automation
+| Technology                   | Purpose                        |
+| ---------------------------- | ------------------------------ |
+| **n8n**                      | Workflow automation            |
+| **Google Sheets**            | Lead data storage              |
+| **JavaScript**               | Data filtering and preparation |
+| **Google Gemini**            | AI-powered lead analysis       |
+| **Gmail**                    | Automated report delivery      |
+| **Structured Output Parser** | Consistent AI response format  |
 
 ---
 
-## 🎯 Project Goal
+## ⚙️ Setup
 
-The goal of this automation is to reduce manual lead monitoring and provide the business owner with an automated daily overview of leads while immediately alerting the responsible team when a problematic lead is detected.
+### Prerequisites
+
+Before importing the workflow, make sure you have:
+
+* n8n installed or hosted
+* Google Sheets access
+* Google Gemini credentials
+* Gmail credentials
+* A Google Sheet containing your lead data
+
+### Google Sheets
+
+Create a sheet containing the required lead fields, including:
+
+```text
+name
+email
+company_name
+company_size
+country
+industry
+estimated_budget
+service_required
+project_description
+report_status
+row_number
+```
+
+### n8n Credentials
+
+Configure the required credentials for:
+
+* Google Sheets
+* Gmail
+* Google Gemini
+
+Then import the workflow JSON into n8n.
 
 ---
 
-## 🚧 Project Status
+## 📊 Example Use Case
 
-*Work in Progress 🚧*
+A sales team collects leads through a form and stores them in Google Sheets.
 
-The project is currently under development and will be continued.
+Instead of manually reviewing every lead:
 
-Upcoming work includes:
-- Completing the n8n workflow
-- Testing lead classification
-- Testing email alerts
-- Testing daily reports
-- Improving AI prompts
-- Final workflow testing
-- Documentation and demo
+1. The workflow runs automatically.
+2. New leads are collected.
+3. Previously reported leads are ignored.
+4. Gemini analyzes the new leads.
+5. Leads are categorized as normal or problematic.
+6. A consolidated report is generated.
+7. The report is emailed to the team.
+8. Processed leads are marked as `sent`.
+
+This allows the sales team to focus on important leads instead of manually reviewing spreadsheets.
 
 ---
 
-## 👨‍💻 Built With
+## 🔐 Security
 
-*n8n + Gemini AI + Tally Forms + Google Sheets*
+When publishing this workflow to GitHub:
 
-## Still in progress
+* **Do not expose API keys or passwords.**
+* Remove or replace credential IDs.
+* Avoid publishing private Google Sheet IDs.
+* Avoid exposing personal email addresses.
+* Configure credentials directly inside your n8n instance.
+
+---
+
+## 📈 Benefits
+
+* Reduces manual lead analysis
+* Automates recurring reporting
+* Prevents duplicate reports
+* Uses AI for lead classification
+* Centralizes lead analysis
+* Provides automated team notifications
+* Saves time for sales and operations teams
+
+---
+
+## 🔮 Future Improvements
+
+Possible improvements include:
+
+* Add Slack or Microsoft Teams notifications
+* Create lead priority scores
+* Automatically assign leads to sales representatives
+* Add CRM integration
+* Generate daily/weekly/monthly analytics
+* Store AI analysis history
+* Add dashboards for lead performance
+* Send separate alerts for high-priority leads
+
+---
+
+## 👨‍💻 Project Type
+
+**AI Automation | Lead Management | n8n Workflow | AI-Powered Reporting**
+
+---
+
+## 📄 License
+
+This project is available for learning, development, and personal automation purposes. Add an appropriate open-source license if you plan to distribute or modify it publicly.
+
+
+
 <img width="1920" height="1080" alt="report 2" src="https://github.com/user-attachments/assets/2cc41c02-de43-42f7-b5d5-c533de33bcf0" />
 
 <img width="1920" height="1080" alt="report data" src="https://github.com/user-attachments/assets/0d7dec4c-a3a5-4320-ba8e-c53c5c5425fe" />
